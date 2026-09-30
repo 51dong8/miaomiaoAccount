@@ -28,6 +28,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.AddPhotoAlternate
 import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material3.AlertDialog
@@ -307,8 +308,67 @@ fun CategoryEditDialog(
                 Column(
                     Modifier
                         .verticalScroll(rememberScrollState())
-                        .heightIn(max = 340.dp)
+                        .heightIn(max = 360.dp)
                 ) {
+                    // 颜色行放在最上方：输入名称时键盘弹出也能直接看到/点到
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("颜色", style = MaterialTheme.typography.labelMedium)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            // 当前选中颜色预览
+                            Box(
+                                Modifier
+                                    .size(22.dp)
+                                    .clip(CircleShape)
+                                    .background(color)
+                                    .border(1.dp, MaterialTheme.colorScheme.onSurfaceVariant, CircleShape)
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                "已选",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        CategoryPalette.forEach { c ->
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(c)
+                                    .then(
+                                        if (color == c) {
+                                            Modifier.border(3.dp, MaterialTheme.colorScheme.onBackground, CircleShape)
+                                        } else {
+                                            Modifier
+                                        }
+                                    )
+                                    .clickable { color = c },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (color == c) {
+                                    Icon(
+                                        Icons.Rounded.Check,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(14.dp))
                     Row(
                         Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -362,32 +422,6 @@ fun CategoryEditDialog(
                             ) {
                                 Text(emoji, fontSize = 16.sp)
                             }
-                        }
-                    }
-                    Spacer(Modifier.height(12.dp))
-                    Text("颜色", style = MaterialTheme.typography.labelMedium)
-                    Spacer(Modifier.height(6.dp))
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        CategoryPalette.forEach { c ->
-                            Box(
-                                modifier = Modifier
-                                    .size(30.dp)
-                                    .clip(CircleShape)
-                                    .background(c)
-                                    .then(
-                                        if (color == c) {
-                                            Modifier.border(2.5.dp, MaterialTheme.colorScheme.onBackground, CircleShape)
-                                        } else {
-                                            Modifier
-                                        }
-                                    )
-                                    .clickable { color = c }
-                            )
                         }
                     }
                 }

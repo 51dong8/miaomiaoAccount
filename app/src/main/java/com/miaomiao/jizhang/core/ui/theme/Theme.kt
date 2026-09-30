@@ -1,11 +1,13 @@
 package com.miaomiao.jizhang.core.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import com.miaomiao.jizhang.core.data.repository.SettingsRepository
 
@@ -65,9 +67,15 @@ fun MiaoMiaoTheme(
         SettingsRepository.THEME_DARK -> true
         else -> isSystemInDarkTheme()
     }
-    MaterialTheme(
-        colorScheme = if (darkTheme) DarkColors else LightColors,
-        typography = Typography(),
-        content = content
-    )
+    val colorScheme = if (darkTheme) DarkColors else LightColors
+    CompositionLocalProvider(
+        // 强制所有未显式指定颜色的文字跟随主题（避免深色模式下出现黑字）
+        LocalContentColor provides colorScheme.onSurface
+    ) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography(),
+            content = content
+        )
+    }
 }

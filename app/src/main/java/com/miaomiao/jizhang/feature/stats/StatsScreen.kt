@@ -125,13 +125,7 @@ fun StatsScreen() {
             StatsTab("预算", active = tab == 1, Modifier.weight(1f)) { tab = 1 }
         }
 
-        // 内容区：与首页一致，可滚动适配不同屏幕高度
-        Column(
-            Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
-        ) {
+        // 内容区：各 Tab 内部自带滚动与边距
         when (tab) {
             0 -> OverviewTab(
                 summary = summary,
@@ -165,7 +159,6 @@ fun StatsScreen() {
                 },
                 onAddCategory = { showCategoryPicker = true }
             )
-        }
         }
     }
 

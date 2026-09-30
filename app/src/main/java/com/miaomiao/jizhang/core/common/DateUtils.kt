@@ -38,8 +38,12 @@ object DateUtils {
     fun monthRangeMillis(yearMonth: YearMonth): Pair<Long, Long> =
         dayStartMillis(yearMonth.atDay(1)) to dayStartMillis(yearMonth.plusMonths(1).atDay(1))
 
-    fun toLocalDate(dateTime: Long): LocalDate =
+    fun toLocalDate(dateTime: Long): LocalDate = try {
         Instant.ofEpochMilli(dateTime).atZone(ZoneId.systemDefault()).toLocalDate()
+    } catch (e: Exception) {
+        // 极端/异常时间戳兜底，避免统计等页面崩溃
+        LocalDate.ofEpochDay(0)
+    }
 
     /** 列表分组日期头：今天 / 昨天 / 9月28日 周一 / 2025年12月31日 周三 */
     fun formatDayHeader(dateTime: Long): String {
