@@ -1,6 +1,6 @@
 # 喵喵记 · 数据库文档（DATABASE.md）
 
-数据库：`miaomiao.db`，版本 1。金额单位：**分（Long）**。时间单位：**epoch millis（Long）**。
+数据库：`miaomiao.db`，版本 **2**（v1→v2 新增周期账单规则表）。金额单位：**分（Long）**。时间单位：**epoch millis（Long）**。
 
 ## 表结构
 
@@ -50,11 +50,29 @@
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
 | id | Int PK = 1 | |
-| fishCount | Int | 小鱼干（每记一笔 +1） |
+| fishCount | Int | 小鱼干（每记一笔 +1，删除账单 -1，不低于 0） |
 | streakDays | Int | 连续记账天数 |
 | lastRecordDate | String | "yyyy-MM-dd" |
-| totalCount | Int | 累计笔数 |
+| totalCount | Int | 累计笔数（删除账单 -1，不低于 0） |
 | animationsEnabled | Boolean | 记账动画开关 |
+
+### recurring_rules（周期账单规则，v2 新增）
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| id | Long PK 自增 | |
+| type | String | EXPENSE / INCOME |
+| amount | Long | 金额，分 |
+| categoryId / accountId | Long | 分类 / 账户 |
+| note | String | 备注 |
+| frequency | String | DAILY / WEEKLY / MONTHLY |
+| dayOfWeek | Int? | WEEKLY：1(周一)..7(周日) |
+| dayOfMonth | Int? | MONTHLY：1..31，当月无此日取月末 |
+| startDate | String | 规则创建日 "yyyy-MM-dd"（当天账单手动记，不自动补） |
+| lastGeneratedDate | String | 已生成到的日期，下次从次日补 |
+| active | Boolean | 停用后不再生成 |
+| createdAt | Long | |
+
+生成逻辑：App 启动时与每日 WorkManager 任务调用 `RecurringRepository.generateDue(today)`，为 active 规则在 (lastGeneratedDate, today] 内补账单；同一条规则不重复生成。
 
 ## 种子数据
 首次建库时写入（SeedCallback，事务内同步）：
@@ -68,4 +86,7 @@
 - 备份恢复在 `BackupManager` 内用 `db.withTransaction` 全量重建。
 
 ## Repository 接口（feature 层唯一入口）
-TransactionRepository / CategoryRepository / AccountRepository / BudgetRepository / CatRepository / SettingsRepository(DataStore)
+TransactionRepository / CategoryRepository / AccountRepository / BudgetRepository / CatRepository / RecurringRepository / SettingsRepository(DataStore)
+
+## 迁移
+- v1 → v2：`MIGRATION_1_2` 新建 recurring_rules 表（无数据丢失）。

@@ -8,14 +8,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.miaomiao.jizhang.core.common.DateUtils
 import com.miaomiao.jizhang.core.common.MoneyFormatter
+import com.miaomiao.jizhang.core.common.RecurringFrequency
 import com.miaomiao.jizhang.core.common.TxType
 import com.miaomiao.jizhang.core.data.entity.AccountEntity
 import com.miaomiao.jizhang.core.data.entity.CategoryEntity
 import com.miaomiao.jizhang.core.data.entity.CatStateEntity
+import com.miaomiao.jizhang.core.data.entity.RecurringRuleEntity
 import com.miaomiao.jizhang.core.data.entity.TransactionEntity
 import com.miaomiao.jizhang.core.data.repository.AccountRepository
 import com.miaomiao.jizhang.core.data.repository.CatRepository
 import com.miaomiao.jizhang.core.data.repository.CategoryRepository
+import com.miaomiao.jizhang.core.data.repository.RecurringRepository
 import com.miaomiao.jizhang.core.data.repository.TransactionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,11 +35,15 @@ class AddViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val categoryRepository: CategoryRepository,
     private val accountRepository: AccountRepository,
-    private val catRepository: CatRepository
+    private val catRepository: CatRepository,
+    private val recurringRepository: RecurringRepository
 ) : ViewModel() {
 
     /** 编辑模式下的账单 id；新增为 null */
     val editingId: Long? = savedStateHandle.get<Long>("transactionId")?.takeIf { it > 0 }
+
+    /** 重复记账：来源账单 id（add/copy/{copyId} 路由） */
+    private val copyId: Long? = savedStateHandle.get<Long>("copyId")?.takeIf { it > 0 }
 
     var isExpense by mutableStateOf(true)
         private set
@@ -80,6 +87,18 @@ class AddViewModel @Inject constructor(
     /** 编辑模式下保留的原始时间戳 */
     private var originalDateTime: Long? = null
 
+    /** 周期频率（仅新增时生效，编辑模式禁用） */
+    var frequency by mutableStateOf(RecurringFrequency.NONE)
+        private set
+
+    /** 每周周期的星期几 1..7 */
+    var weeklyDay by mutableStateOf(LocalDate.now().dayOfWeek.value)
+        private set
+
+    /** 每月周期的日号 1..31 */
+    var monthlyDay by mutableStateOf(LocalDate.now().dayOfMonth)
+        private set
+
     init {
         viewModelScope.launch {
             categoryRepository.observeByType(TxType.EXPENSE).collectLatest { list ->
@@ -106,6 +125,7 @@ class AddViewModel @Inject constructor(
             }
         }
         loadEditing()
+        loadCopy()
     }
 
     private fun loadEditing() {
@@ -119,6 +139,21 @@ class AddViewModel @Inject constructor(
                 selectedAccount = accountRepository.getById(t.accountId)
                 note = t.note
                 selectedDate = DateUtils.toLocalDate(t.dateTime)
+            }
+        }
+    }
+
+    /** 重复记账：复制原账单的金额/分类/账户/备注，日期归为今天，按新增保存。 */
+    private fun loadCopy() {
+        val id = copyId ?: return
+        viewModelScope.launch {
+            transactionRepository.getById(id)?.let { t ->
+                isExpense = t.type == TxType.EXPENSE
+                amountInput = MoneyFormatter.formatPlain(t.amount).replace(",", "")
+                selectedCategory = categoryRepository.getById(t.categoryId)
+                selectedAccount = accountRepository.getById(t.accountId)
+                note = t.note
+                selectedDate = LocalDate.now()
             }
         }
     }
@@ -146,6 +181,18 @@ class AddViewModel @Inject constructor(
 
     fun selectAccount(account: AccountEntity) {
         selectedAccount = account
+    }
+
+    fun updateFrequency(value: String) {
+        frequency = value
+    }
+
+    fun updateWeeklyDay(day: Int) {
+        weeklyDay = day.coerceIn(1, 7)
+    }
+
+    fun updateMonthlyDay(day: Int) {
+        monthlyDay = day.coerceIn(1, 31)
     }
 
     /** 数字键盘输入。 */
@@ -198,6 +245,24 @@ class AddViewModel @Inject constructor(
                 onSaved()
             } else {
                 transactionRepository.insert(transaction)
+                // 周期账单：登记规则（首次记账日即 startDate，下次从次日生成）
+                if (frequency != RecurringFrequency.NONE) {
+                    recurringRepository.add(
+                        RecurringRuleEntity(
+                            type = transaction.type,
+                            amount = transaction.amount,
+                            categoryId = transaction.categoryId,
+                            accountId = transaction.accountId,
+                            note = transaction.note,
+                            frequency = frequency,
+                            dayOfWeek = if (frequency == RecurringFrequency.WEEKLY) weeklyDay else null,
+                            dayOfMonth = if (frequency == RecurringFrequency.MONTHLY) monthlyDay else null,
+                            startDate = selectedDate.toString(),
+                            lastGeneratedDate = selectedDate.toString(),
+                            createdAt = System.currentTimeMillis()
+                        )
+                    )
+                }
                 lastCatState = catRepository.onRecordSaved(selectedDate)
                 isSaving = false
                 showSaveSuccess = true
@@ -213,7 +278,19 @@ class AddViewModel @Inject constructor(
     fun delete(onDeleted: () -> Unit) {
         val id = editingId ?: return
         viewModelScope.launch {
-            transactionRepository.getById(id)?.let { transactionRepository.delete(it) }
+            transactionRepository.getById(id)?.let { t ->
+                val day = DateUtils.toLocalDate(t.dateTime)
+                val remainingToday = transactionRepository.countByDate(day)
+                transactionRepository.delete(t)
+                val lastRemaining = if (remainingToday <= 1) {
+                    // 当天已无账单：回退到删除后的最近账单日期（可能为 null）
+                    transactionRepository.getLastRecordDate()
+                } else {
+                    // 当天还有其他账单，连续记录不受影响
+                    day.toString()
+                }
+                catRepository.onRecordDeleted(day, lastRemaining)
+            }
             onDeleted()
         }
     }

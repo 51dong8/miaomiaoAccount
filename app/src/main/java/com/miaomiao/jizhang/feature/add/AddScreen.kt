@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.miaomiao.jizhang.core.common.RecurringFrequency
 import com.miaomiao.jizhang.core.data.entity.AccountEntity
 import com.miaomiao.jizhang.core.data.entity.CategoryEntity
 import com.miaomiao.jizhang.core.data.entity.CatStateEntity
@@ -137,6 +138,21 @@ fun AddScreen(
                     singleLine = true,
                     shape = RoundedCornerShape(14.dp)
                 )
+
+                // 周期（仅新增时显示）
+                if (vm.editingId == null) {
+                    Spacer(Modifier.height(18.dp))
+                    Text("周期", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                    Spacer(Modifier.height(10.dp))
+                    FrequencySelector(
+                        frequency = vm.frequency,
+                        weeklyDay = vm.weeklyDay,
+                        monthlyDay = vm.monthlyDay,
+                        onFrequency = vm::updateFrequency,
+                        onWeeklyDay = vm::updateWeeklyDay,
+                        onMonthlyDay = vm::updateMonthlyDay
+                    )
+                }
                 Spacer(Modifier.height(16.dp))
             }
 
@@ -455,6 +471,130 @@ private fun AccountRow(
                 }
             }
         }
+    }
+}
+
+/** 保存成功全屏动画：猫咪 + 小鱼干。 */
+@Composable
+private fun FrequencySelector(
+    frequency: String,
+    weeklyDay: Int,
+    monthlyDay: Int,
+    onFrequency: (String) -> Unit,
+    onWeeklyDay: (Int) -> Unit,
+    onMonthlyDay: (Int) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(14.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .padding(4.dp)
+        ) {
+            FreqChip("仅一次", frequency == RecurringFrequency.NONE, Modifier.weight(1f)) {
+                onFrequency(RecurringFrequency.NONE)
+            }
+            FreqChip("每天", frequency == RecurringFrequency.DAILY, Modifier.weight(1f)) {
+                onFrequency(RecurringFrequency.DAILY)
+            }
+            FreqChip("每周", frequency == RecurringFrequency.WEEKLY, Modifier.weight(1f)) {
+                onFrequency(RecurringFrequency.WEEKLY)
+            }
+            FreqChip("每月", frequency == RecurringFrequency.MONTHLY, Modifier.weight(1f)) {
+                onFrequency(RecurringFrequency.MONTHLY)
+            }
+        }
+
+        if (frequency == RecurringFrequency.WEEKLY) {
+            val names = arrayOf("一", "二", "三", "四", "五", "六", "日")
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                (1..7).forEach { d ->
+                    Box(
+                        Modifier
+                            .weight(1f)
+                            .height(34.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (d == weeklyDay) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.surfaceVariant
+                            )
+                            .clickable { onWeeklyDay(d) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = names[d - 1],
+                            fontSize = 12.sp,
+                            color = if (d == weeklyDay) MaterialTheme.colorScheme.onPrimary
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = if (d == weeklyDay) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+                }
+            }
+        }
+
+        if (frequency == RecurringFrequency.MONTHLY) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                (1..31).forEach { d ->
+                    Box(
+                        Modifier
+                            .size(34.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (d == monthlyDay) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.surfaceVariant
+                            )
+                            .clickable { onMonthlyDay(d) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "$d",
+                            fontSize = 12.sp,
+                            color = if (d == monthlyDay) MaterialTheme.colorScheme.onPrimary
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = if (d == monthlyDay) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FreqChip(
+    label: String,
+    active: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = modifier
+            .height(34.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .background(
+                if (active) MaterialTheme.colorScheme.primary
+                else Color.Transparent
+            )
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = label,
+            fontSize = 13.sp,
+            color = if (active) MaterialTheme.colorScheme.onPrimary
+            else MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = if (active) FontWeight.Bold else FontWeight.Normal
+        )
     }
 }
 

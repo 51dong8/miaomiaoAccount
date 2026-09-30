@@ -47,6 +47,14 @@ interface TransactionDao {
     @Query("SELECT COUNT(*) FROM transactions WHERE accountId = :accountId")
     suspend fun countByAccount(accountId: Long): Int
 
+    /** 某时间区间（一天）内的账单数，用于删除回滚判断 */
+    @Query("SELECT COUNT(*) FROM transactions WHERE dateTime BETWEEN :start AND :end")
+    suspend fun countBetween(start: Long, end: Long): Int
+
+    /** 最近一条账单的时间戳（删除后回退连续天数用） */
+    @Query("SELECT dateTime FROM transactions ORDER BY dateTime DESC, id DESC LIMIT 1")
+    suspend fun getLastDateTime(): Long?
+
     @Query("DELETE FROM transactions")
     suspend fun deleteAll()
 }

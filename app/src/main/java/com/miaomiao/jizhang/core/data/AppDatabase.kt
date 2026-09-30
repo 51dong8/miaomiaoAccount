@@ -4,16 +4,19 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.miaomiao.jizhang.core.data.dao.AccountDao
 import com.miaomiao.jizhang.core.data.dao.BudgetDao
 import com.miaomiao.jizhang.core.data.dao.CategoryDao
 import com.miaomiao.jizhang.core.data.dao.CatStateDao
+import com.miaomiao.jizhang.core.data.dao.RecurringRuleDao
 import com.miaomiao.jizhang.core.data.dao.TransactionDao
 import com.miaomiao.jizhang.core.data.entity.AccountEntity
 import com.miaomiao.jizhang.core.data.entity.BudgetEntity
 import com.miaomiao.jizhang.core.data.entity.CategoryEntity
 import com.miaomiao.jizhang.core.data.entity.CatStateEntity
+import com.miaomiao.jizhang.core.data.entity.RecurringRuleEntity
 import com.miaomiao.jizhang.core.data.entity.TransactionEntity
 
 @Database(
@@ -22,9 +25,10 @@ import com.miaomiao.jizhang.core.data.entity.TransactionEntity
         CategoryEntity::class,
         AccountEntity::class,
         BudgetEntity::class,
-        CatStateEntity::class
+        CatStateEntity::class,
+        RecurringRuleEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -34,10 +38,36 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun accountDao(): AccountDao
     abstract fun budgetDao(): BudgetDao
     abstract fun catStateDao(): CatStateDao
+    abstract fun recurringRuleDao(): RecurringRuleDao
 
     companion object {
         @Volatile
         private var instance: AppDatabase? = null
+
+        /** v1 → v2：新增周期账单规则表 */
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS recurring_rules (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        type TEXT NOT NULL,
+                        amount INTEGER NOT NULL,
+                        categoryId INTEGER NOT NULL,
+                        accountId INTEGER NOT NULL,
+                        note TEXT NOT NULL,
+                        frequency TEXT NOT NULL,
+                        dayOfWeek INTEGER,
+                        dayOfMonth INTEGER,
+                        startDate TEXT NOT NULL,
+                        lastGeneratedDate TEXT NOT NULL,
+                        active INTEGER NOT NULL,
+                        createdAt INTEGER NOT NULL
+                    )
+                    """.trimIndent()
+                )
+            }
+        }
 
         fun get(context: Context): AppDatabase = instance ?: synchronized(this) {
             instance ?: Room.databaseBuilder(
@@ -46,6 +76,7 @@ abstract class AppDatabase : RoomDatabase() {
                 "miaomiao.db"
             )
                 .addCallback(SeedCallback())
+                .addMigrations(MIGRATION_1_2)
                 .build()
                 .also { instance = it }
         }

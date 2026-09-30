@@ -1,5 +1,6 @@
 package com.miaomiao.jizhang.core.data.repository
 
+import com.miaomiao.jizhang.core.common.computeDeleteRollback
 import com.miaomiao.jizhang.core.common.computeStreak
 import com.miaomiao.jizhang.core.data.dao.CatStateDao
 import com.miaomiao.jizhang.core.data.entity.CatStateEntity
@@ -39,5 +40,30 @@ class CatRepository @Inject constructor(
     suspend fun setAnimationsEnabled(enabled: Boolean) {
         val current = dao.get() ?: CatStateEntity()
         dao.insert(current.copy(animationsEnabled = enabled))
+    }
+
+    /**
+     * 删除账单时调用，回滚猫咪数据：
+     * - 小鱼干 -1（不低于 0）
+     * - 累计笔数 -1（不低于 0）
+     * - 若删的是最后记账日，连续天数 -1 并回退 lastRecordDate
+     * @param lastRemainingDate 删除后当天仍有账单则传当天日期，否则传最近账单日期（无则 null）
+     */
+    suspend fun onRecordDeleted(recordDate: LocalDate, lastRemainingDate: String?): CatStateEntity {
+        val current = dao.get() ?: CatStateEntity()
+        val (newStreak, newLast) = computeDeleteRollback(
+            current.streakDays,
+            current.lastRecordDate,
+            recordDate.toString(),
+            lastRemainingDate
+        )
+        val updated = current.copy(
+            fishCount = (current.fishCount - 1).coerceAtLeast(0),
+            totalCount = (current.totalCount - 1).coerceAtLeast(0),
+            streakDays = newStreak,
+            lastRecordDate = newLast
+        )
+        dao.insert(updated)
+        return updated
     }
 }

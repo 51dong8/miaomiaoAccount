@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -21,15 +22,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import com.miaomiao.jizhang.core.common.MoneyFormatter
 import com.miaomiao.jizhang.core.ui.theme.IncomeGreen
 import com.miaomiao.jizhang.core.ui.theme.OrangeDeep
 import com.miaomiao.jizhang.core.ui.theme.OrangePrimary
+import java.io.File
 
 /** 圆角卡片容器。 */
 @Composable
@@ -69,7 +73,7 @@ fun EmptyState(
     }
 }
 
-/** 圆形彩色底 + emoji 的分类/账户图标。 */
+/** 圆形彩色底 + emoji 或本地图片的分类/账户图标。icon 以 "file:" 开头视为本地图片路径。 */
 @Composable
 fun CategoryAvatar(
     icon: String,
@@ -84,7 +88,18 @@ fun CategoryAvatar(
             .background(color.copy(alpha = 0.18f)),
         contentAlignment = Alignment.Center
     ) {
-        Text(text = icon, fontSize = (size.value * 0.44f).sp)
+        if (icon.startsWith("file:")) {
+            AsyncImage(
+                model = File(icon.removePrefix("file:")),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(CircleShape)
+            )
+        } else {
+            Text(text = icon, fontSize = (size.value * 0.44f).sp)
+        }
     }
 }
 

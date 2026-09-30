@@ -18,8 +18,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -42,10 +44,11 @@ import com.miaomiao.jizhang.core.ui.components.CategoryAvatar
 import com.miaomiao.jizhang.core.ui.components.EmptyState
 import com.miaomiao.jizhang.core.ui.components.MoneyText
 
-/** 账单列表：按日分组、搜索、类型筛选、点击编辑。 */
+/** 账单列表：按日分组、搜索、类型筛选、点击编辑、复制再记。 */
 @Composable
 fun RecordsScreen(
-    onEditTransaction: (Long) -> Unit
+    onEditTransaction: (Long) -> Unit,
+    onCopyTransaction: (Long) -> Unit
 ) {
     val vm: RecordsViewModel = hiltViewModel()
     val grouped by vm.grouped.collectAsStateWithLifecycle()
@@ -113,7 +116,8 @@ fun RecordsScreen(
                                     categoryColor = Color(categories[transaction.categoryId]?.color ?: 0xFFADB5BD),
                                     accountName = accounts[transaction.accountId]?.name,
                                     symbol = currency,
-                                    onClick = { onEditTransaction(transaction.id) }
+                                    onClick = { onEditTransaction(transaction.id) },
+                                    onCopy = { onCopyTransaction(transaction.id) }
                                 )
                             }
                         }
@@ -205,7 +209,8 @@ private fun RecordItem(
     categoryColor: Color,
     accountName: String?,
     symbol: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onCopy: () -> Unit
 ) {
     Row(
         Modifier
@@ -240,5 +245,14 @@ private fun RecordItem(
             symbol = symbol,
             style = MaterialTheme.typography.bodyLarge
         )
+        Spacer(Modifier.width(4.dp))
+        IconButton(onClick = onCopy, modifier = Modifier.size(30.dp)) {
+            Icon(
+                imageVector = Icons.Rounded.ContentCopy,
+                contentDescription = "复制再记",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                modifier = Modifier.size(16.dp)
+            )
+        }
     }
 }

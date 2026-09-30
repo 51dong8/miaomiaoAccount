@@ -18,17 +18,24 @@
 - [x] 猫咪系统（小鱼干、连续天数、成就、动画开关）
 - [x] 设置（主题、货币、备份导出/导入恢复）
 
-## 里程碑 M4 ⏳ 测试、发布
-- [x] JVM 单元测试（金额格式化、日期/预算周期、连续记账逻辑）✅ 12 个用例全部通过
+## 里程碑 M4 ✅ 测试、发布（2026-09-30 完成）
+- [x] JVM 单元测试（金额格式化、日期/预算周期、连续记账/删除回滚、周期账单生成）✅ 全部通过
 - [x] 首次编译验证（assembleDebug 成功，APK 19.7MB）
-- [ ] 真机手动验收
-- [ ] 图标/签名/隐私政策/商店素材
-- [ ] 版本 Tag `v1.0.0`
+- [x] Release 签名（keystore/release.jks，别名 miaomiao，密码 miaomiao2026）+ assembleRelease 签名 APK
+- [x] 版本 Tag `v1.0.0`（commit 8c1ba8e）
+- [x] 隐私政策（docs/PRIVACY_POLICY.md）
+- [x] 商店素材（store_assets/icon_512.png、feature_graphic.png、STORE_README.md）
+- [ ] 真机手动验收（见 docs/SELF_TEST_REPORT.md 的自测清单）
+
+## 已实现 backlog（2026-09-30）
+- [x] 重复记账：账单列表每条记录带「复制再记」按钮，一键预填再记
+- [x] 周期账单：记一笔选「每天/每周/每月」建规则；启动时 + 每日 WorkManager 自动补账单；「我的 → 周期账单」管理（启停/删除）
+- [x] 预算超支系统通知：WorkManager 每日任务 + 启动时检查，月预算/分类预算超支发系统通知（NotificationChannel）
+- [x] 自定义分类/账户图标上传（Coil 3）：编辑对话框「上传图片」，存本地私有目录，任意界面渲染；可清除回 emoji
+- [x] 修复：删除账单后小鱼干/累计笔数/连续天数同步回滚（computeDeleteRollback，含单元测试）
 
 ## 下一步候选（backlog）
 - 账户余额与转账
-- 重复记账 / 周期账单
 - 桌面小组件（Glance）
 - 生物识别锁
-- 预算超支系统通知（WorkManager）
-- 自定义分类图标上传（Coil）
+- 云同步

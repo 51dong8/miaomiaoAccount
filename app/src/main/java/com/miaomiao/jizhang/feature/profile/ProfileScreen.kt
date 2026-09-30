@@ -41,6 +41,7 @@ import com.miaomiao.jizhang.core.ui.components.CatFace
 import com.miaomiao.jizhang.core.ui.components.SectionCard
 import com.miaomiao.jizhang.core.ui.components.moodFor
 import com.miaomiao.jizhang.feature.cat.CatViewModel
+import androidx.compose.material.icons.rounded.Repeat
 
 /** 我的：猫咪 + 管理入口。 */
 @Composable
@@ -48,7 +49,8 @@ fun ProfileScreen(
     onOpenCat: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenCategories: () -> Unit,
-    onOpenAccounts: () -> Unit
+    onOpenAccounts: () -> Unit,
+    onOpenRecurring: () -> Unit
 ) {
     val catVm: CatViewModel = hiltViewModel()
     val catState by catVm.catState.collectAsStateWithLifecycle()
@@ -114,6 +116,8 @@ fun ProfileScreen(
             EntryRow(Icons.Rounded.Category, "分类管理", "自定义支出/收入分类") { onOpenCategories() }
             EntryDivider()
             EntryRow(Icons.Rounded.Wallet, "账户管理", "现金、微信、支付宝、银行卡") { onOpenAccounts() }
+            EntryDivider()
+            EntryRow(Icons.Rounded.Repeat, "周期账单", "每天/每周/每月自动记账") { onOpenRecurring() }
             EntryDivider()
             EntryRow(Icons.Rounded.Pets, "猫咪系统", "小鱼干、成就、动画开关") { onOpenCat() }
             EntryDivider()

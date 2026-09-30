@@ -10,6 +10,7 @@ import com.miaomiao.jizhang.feature.add.AddScreen
 import com.miaomiao.jizhang.feature.cat.CatScreen
 import com.miaomiao.jizhang.feature.manage.AccountManageScreen
 import com.miaomiao.jizhang.feature.manage.CategoryManageScreen
+import com.miaomiao.jizhang.feature.recurring.RecurringManageScreen
 import com.miaomiao.jizhang.feature.settings.SettingsScreen
 
 /** 应用导航根。 */
@@ -25,7 +26,9 @@ fun AppRoot() {
                 onOpenSettings = { navController.navigate(Routes.SETTINGS) },
                 onOpenCategories = { navController.navigate(Routes.CATEGORIES) },
                 onOpenAccounts = { navController.navigate(Routes.ACCOUNTS) },
-                onEditTransaction = { id -> navController.navigate(Routes.addEdit(id)) }
+                onOpenRecurring = { navController.navigate(Routes.RECURRING) },
+                onEditTransaction = { id -> navController.navigate(Routes.addEdit(id)) },
+                onCopyTransaction = { id -> navController.navigate(Routes.addCopy(id)) }
             )
         }
         composable(Routes.ADD) {
@@ -34,6 +37,12 @@ fun AppRoot() {
         composable(
             route = Routes.ADD_EDIT,
             arguments = listOf(navArgument("transactionId") { type = NavType.LongType })
+        ) {
+            AddScreen(onBack = { navController.popBackStack() })
+        }
+        composable(
+            route = Routes.ADD_COPY,
+            arguments = listOf(navArgument("copyId") { type = NavType.LongType })
         ) {
             AddScreen(onBack = { navController.popBackStack() })
         }
@@ -48,6 +57,9 @@ fun AppRoot() {
         }
         composable(Routes.ACCOUNTS) {
             AccountManageScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Routes.RECURRING) {
+            RecurringManageScreen(onBack = { navController.popBackStack() })
         }
     }
 }

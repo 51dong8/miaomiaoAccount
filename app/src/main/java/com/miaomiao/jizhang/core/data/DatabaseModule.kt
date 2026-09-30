@@ -9,6 +9,7 @@ import com.miaomiao.jizhang.core.data.dao.AccountDao
 import com.miaomiao.jizhang.core.data.dao.BudgetDao
 import com.miaomiao.jizhang.core.data.dao.CategoryDao
 import com.miaomiao.jizhang.core.data.dao.CatStateDao
+import com.miaomiao.jizhang.core.data.dao.RecurringRuleDao
 import com.miaomiao.jizhang.core.data.dao.TransactionDao
 import dagger.Module
 import dagger.Provides
@@ -40,6 +41,9 @@ object DatabaseModule {
 
     @Provides
     fun provideCatStateDao(db: AppDatabase): CatStateDao = db.catStateDao()
+
+    @Provides
+    fun provideRecurringRuleDao(db: AppDatabase): RecurringRuleDao = db.recurringRuleDao()
 
     @Provides
     @Singleton

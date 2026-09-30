@@ -13,12 +13,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.AddPhotoAlternate
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -39,8 +41,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.miaomiao.jizhang.core.common.IconPicker
 import com.miaomiao.jizhang.core.data.entity.AccountEntity
 import com.miaomiao.jizhang.core.ui.components.CategoryAvatar
 
@@ -183,6 +189,10 @@ private fun AccountEditDialog(
     var name by remember { mutableStateOf(initialName) }
     var icon by remember { mutableStateOf(initialIcon) }
     var color by remember { mutableStateOf(initialColor) }
+    val context = LocalContext.current
+    val pickLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let { icon = IconPicker.saveImage(context, it, "account_icons") ?: icon }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -197,7 +207,31 @@ private fun AccountEditDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(Modifier.height(12.dp))
-                Text("图标", style = MaterialTheme.typography.labelMedium)
+                Row(
+                    Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("图标", style = MaterialTheme.typography.labelMedium)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        TextButton(
+                            onClick = { pickLauncher.launch("image/*") },
+                            contentPadding = PaddingValues(horizontal = 8.dp)
+                        ) {
+                            Icon(Icons.Rounded.AddPhotoAlternate, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("上传图片", style = MaterialTheme.typography.labelSmall)
+                        }
+                        if (IconPicker.isImageIcon(icon)) {
+                            TextButton(
+                                onClick = { icon = "💳" },
+                                contentPadding = PaddingValues(horizontal = 8.dp)
+                            ) {
+                                Text("清除", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
+                            }
+                        }
+                    }
+                }
                 Spacer(Modifier.height(6.dp))
                 Row(
                     Modifier

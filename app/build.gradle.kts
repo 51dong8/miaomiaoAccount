@@ -18,9 +18,19 @@ android {
         versionName = "1.0.0"
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = rootProject.file(providers.gradleProperty("RELEASE_STORE_FILE").get())
+            storePassword = providers.gradleProperty("RELEASE_STORE_PASSWORD").get()
+            keyAlias = providers.gradleProperty("RELEASE_KEY_ALIAS").get()
+            keyPassword = providers.gradleProperty("RELEASE_KEY_PASSWORD").get()
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -70,6 +80,13 @@ dependencies {
     ksp(libs.room.compiler)
 
     implementation(libs.datastore.preferences)
+
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
+
+    implementation(libs.workmanager)
+    implementation(libs.hilt.work)
+    ksp(libs.hilt.work.compiler)
 
     testImplementation(libs.junit)
 }

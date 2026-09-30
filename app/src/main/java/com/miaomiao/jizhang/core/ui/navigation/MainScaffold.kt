@@ -55,7 +55,9 @@ fun MainScaffold(
     onOpenSettings: () -> Unit,
     onOpenCategories: () -> Unit,
     onOpenAccounts: () -> Unit,
-    onEditTransaction: (Long) -> Unit
+    onOpenRecurring: () -> Unit,
+    onEditTransaction: (Long) -> Unit,
+    onCopyTransaction: (Long) -> Unit
 ) {
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
 
@@ -76,13 +78,17 @@ fun MainScaffold(
                     onOpenCat = onOpenCat,
                     onEditTransaction = onEditTransaction
                 )
-                1 -> RecordsScreen(onEditTransaction = onEditTransaction)
+                1 -> RecordsScreen(
+                    onEditTransaction = onEditTransaction,
+                    onCopyTransaction = onCopyTransaction
+                )
                 2 -> StatsScreen()
                 else -> ProfileScreen(
                     onOpenCat = onOpenCat,
                     onOpenSettings = onOpenSettings,
                     onOpenCategories = onOpenCategories,
-                    onOpenAccounts = onOpenAccounts
+                    onOpenAccounts = onOpenAccounts,
+                    onOpenRecurring = onOpenRecurring
                 )
             }
         }
