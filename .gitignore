@@ -16,3 +16,10 @@ app/build
 
 # 构建日志
 *.log
+
+
+# 本地签名配置（含密码，绝不提交）
+/keystore.properties
+
+# 根目录 APK 产物（GitHub 不建议存二进制安装包）
+*.apk

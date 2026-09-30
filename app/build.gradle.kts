@@ -20,10 +20,21 @@ android {
 
     signingConfigs {
         create("release") {
+            // 签名属性：优先读本地 keystore.properties（不入库），缺失时回退 gradle.properties
             storeFile = rootProject.file(providers.gradleProperty("RELEASE_STORE_FILE").get())
-            storePassword = providers.gradleProperty("RELEASE_STORE_PASSWORD").get()
-            keyAlias = providers.gradleProperty("RELEASE_KEY_ALIAS").get()
-            keyPassword = providers.gradleProperty("RELEASE_KEY_PASSWORD").get()
+            val kp = rootProject.file("keystore.properties").takeIf { it.exists() }
+                ?.readLines()
+                ?.mapNotNull { l ->
+                    l.trim().takeIf { it.isNotBlank() && !it.startsWith("#") }
+                        ?.split("=", limit = 2)
+                }
+                ?.associate { it[0].trim() to it[1].trim() }
+                ?: emptyMap()
+            fun sig(name: String): String =
+                kp[name] ?: providers.gradleProperty(name).get()
+            storePassword = sig("RELEASE_STORE_PASSWORD")
+            keyAlias = sig("RELEASE_KEY_ALIAS")
+            keyPassword = sig("RELEASE_KEY_PASSWORD")
         }
     }
 
