@@ -108,7 +108,7 @@ private fun HomeHeader() {
     ) {
         Column {
             Text(
-                text = "喵喵记",
+                text = "喵喵记账",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.ExtraBold,
                 color = MaterialTheme.colorScheme.onBackground

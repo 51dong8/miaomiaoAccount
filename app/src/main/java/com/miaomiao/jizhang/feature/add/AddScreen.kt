@@ -598,7 +598,7 @@ private fun FreqChip(
     }
 }
 
-/** 保存成功全屏动画：猫咪 + 小鱼干。 */
+/** 保存成功全屏动画：猫咪 + 小鱼干，带明显跳过按钮。 */
 @Composable
 private fun SaveSuccessOverlay(
     catState: CatStateEntity,
@@ -615,7 +615,7 @@ private fun SaveSuccessOverlay(
         Box(
             Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.4f)),
+                .background(Color.Black.copy(alpha = 0.45f)),
             contentAlignment = Alignment.Center
         ) {
             Column(
@@ -642,6 +642,22 @@ private fun SaveSuccessOverlay(
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White.copy(alpha = 0.85f)
                 )
+                Spacer(Modifier.height(6.dp))
+                Box(
+                    Modifier
+                        .clip(RoundedCornerShape(50))
+                        .background(Color.White.copy(alpha = 0.25f))
+                        .clickable(onClick = onFinished)
+                        .padding(horizontal = 28.dp, vertical = 10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "知道了，跳过",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White
+                    )
+                }
             }
         }
     }

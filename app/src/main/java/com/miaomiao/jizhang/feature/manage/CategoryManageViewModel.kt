@@ -18,7 +18,6 @@ import javax.inject.Inject
 
 /** 分类删除结果：null=成功，否则为失败原因。 */
 enum class DeleteFailReason {
-    DEFAULT_CATEGORY,
     HAS_TRANSACTIONS
 }
 
@@ -54,10 +53,7 @@ class CategoryManageViewModel @Inject constructor(
 
     fun delete(category: CategoryEntity, onResult: (DeleteFailReason?) -> Unit) {
         viewModelScope.launch {
-            if (category.isDefault) {
-                onResult(DeleteFailReason.DEFAULT_CATEGORY)
-                return@launch
-            }
+            // 内置分类同样允许删除（未使用的）；已被账单使用则提示
             if (transactionRepository.countByCategory(category.id) > 0) {
                 onResult(DeleteFailReason.HAS_TRANSACTIONS)
                 return@launch

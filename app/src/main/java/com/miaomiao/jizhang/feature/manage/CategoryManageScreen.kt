@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.PaddingValues
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -33,6 +35,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -43,6 +46,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -147,7 +151,7 @@ fun CategoryManageScreen(
                         )
                         if (category.isDefault) {
                             Text(
-                                text = "内置分类",
+                                text = "内置（未使用可删除）",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -161,15 +165,13 @@ fun CategoryManageScreen(
                             modifier = Modifier.size(20.dp)
                         )
                     }
-                    if (!category.isDefault) {
-                        IconButton(onClick = { deleteTarget = category }) {
-                            Icon(
-                                Icons.Rounded.Delete,
-                                contentDescription = "删除",
-                                tint = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
+                    IconButton(onClick = { deleteTarget = category }) {
+                        Icon(
+                            Icons.Rounded.Delete,
+                            contentDescription = "删除",
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
                 }
             }
@@ -215,7 +217,6 @@ fun CategoryManageScreen(
                     vm.delete(category) { reason ->
                         deleteTarget = null
                         deleteError = when (reason) {
-                            DeleteFailReason.DEFAULT_CATEGORY -> "内置分类不可删除"
                             DeleteFailReason.HAS_TRANSACTIONS -> "该分类下已有账单，无法删除"
                             null -> null
                         }
@@ -286,11 +287,15 @@ fun CategoryEditDialog(
         uri?.let { icon = IconPicker.saveImage(context, it, "category_icons") ?: icon }
     }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(title) },
-        text = {
-            Column {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.surface,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(Modifier.padding(horizontal = 20.dp, vertical = 18.dp)) {
+                Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(14.dp))
                 OutlinedTextField(
                     value = name,
                     onValueChange = { if (it.length <= 6) name = it },
@@ -298,97 +303,103 @@ fun CategoryEditDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(Modifier.height(12.dp))
-                Row(
-                    Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                Spacer(Modifier.height(10.dp))
+                Column(
+                    Modifier
+                        .verticalScroll(rememberScrollState())
+                        .heightIn(max = 340.dp)
                 ) {
-                    Text("图标", style = MaterialTheme.typography.labelMedium)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        TextButton(
-                            onClick = { pickLauncher.launch("image/*") },
-                            contentPadding = PaddingValues(horizontal = 8.dp)
-                        ) {
-                            Icon(Icons.Rounded.AddPhotoAlternate, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text("上传图片", style = MaterialTheme.typography.labelSmall)
-                        }
-                        if (IconPicker.isImageIcon(icon)) {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("图标", style = MaterialTheme.typography.labelMedium)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             TextButton(
-                                onClick = { icon = "📦" },
+                                onClick = { pickLauncher.launch("image/*") },
                                 contentPadding = PaddingValues(horizontal = 8.dp)
                             ) {
-                                Text("清除", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
+                                Icon(Icons.Rounded.AddPhotoAlternate, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(4.dp))
+                                Text("上传图片", style = MaterialTheme.typography.labelSmall)
+                            }
+                            if (IconPicker.isImageIcon(icon)) {
+                                TextButton(
+                                    onClick = { icon = "📦" },
+                                    contentPadding = PaddingValues(horizontal = 8.dp)
+                                ) {
+                                    Text("清除", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
+                                }
                             }
                         }
                     }
-                }
-                Spacer(Modifier.height(6.dp))
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    CategoryEmojis.forEach { emoji ->
-                        Box(
-                            modifier = Modifier
-                                .size(34.dp)
-                                .clip(CircleShape)
-                                .background(
-                                    if (icon == emoji) MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
-                                    else MaterialTheme.colorScheme.surfaceVariant
-                                )
-                                .then(
-                                    if (icon == emoji) {
-                                        Modifier.border(1.5.dp, MaterialTheme.colorScheme.primary, CircleShape)
-                                    } else {
-                                        Modifier
-                                    }
-                                )
-                                .clickable { icon = emoji },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(emoji, fontSize = 16.sp)
+                    Spacer(Modifier.height(6.dp))
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        CategoryEmojis.forEach { emoji ->
+                            Box(
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (icon == emoji) MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
+                                        else MaterialTheme.colorScheme.surfaceVariant
+                                    )
+                                    .then(
+                                        if (icon == emoji) {
+                                            Modifier.border(1.5.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                                        } else {
+                                            Modifier
+                                        }
+                                    )
+                                    .clickable { icon = emoji },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(emoji, fontSize = 16.sp)
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    Text("颜色", style = MaterialTheme.typography.labelMedium)
+                    Spacer(Modifier.height(6.dp))
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        CategoryPalette.forEach { c ->
+                            Box(
+                                modifier = Modifier
+                                    .size(30.dp)
+                                    .clip(CircleShape)
+                                    .background(c)
+                                    .then(
+                                        if (color == c) {
+                                            Modifier.border(2.5.dp, MaterialTheme.colorScheme.onBackground, CircleShape)
+                                        } else {
+                                            Modifier
+                                        }
+                                    )
+                                    .clickable { color = c }
+                            )
                         }
                     }
                 }
-                Spacer(Modifier.height(12.dp))
-                Text("颜色", style = MaterialTheme.typography.labelMedium)
-                Spacer(Modifier.height(6.dp))
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    CategoryPalette.forEach { c ->
-                        Box(
-                            modifier = Modifier
-                                .size(30.dp)
-                                .clip(CircleShape)
-                                .background(c)
-                                .then(
-                                    if (color == c) {
-                                        Modifier.border(2.5.dp, MaterialTheme.colorScheme.onBackground, CircleShape)
-                                    } else {
-                                        Modifier
-                                    }
-                                )
-                                .clickable { color = c }
-                        )
-                    }
+                Spacer(Modifier.height(14.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    TextButton(onClick = onDismiss) { Text("取消") }
+                    Spacer(Modifier.width(8.dp))
+                    TextButton(onClick = {
+                        if (name.isNotBlank()) onConfirm(name.trim(), icon, color.value.toLong())
+                    }) { Text("保存") }
                 }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                if (name.isNotBlank()) onConfirm(name.trim(), icon, color.value.toLong())
-            }) { Text("保存") }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("取消") }
         }
-    )
+    }
 }

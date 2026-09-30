@@ -126,7 +126,7 @@ fun ProfileScreen(
         Spacer(Modifier.height(20.dp))
 
         Text(
-            text = "喵喵记 v1.0.0",
+            text = "喵喵记账 v1.0.1",
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.fillMaxWidth(),

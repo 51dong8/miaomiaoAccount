@@ -265,7 +265,12 @@ class AddViewModel @Inject constructor(
                 }
                 lastCatState = catRepository.onRecordSaved(selectedDate)
                 isSaving = false
-                showSaveSuccess = true
+                // 仅当猫咪动画开关开启时弹保存成功动画；关闭时直接返回
+                if (lastCatState?.animationsEnabled == true) {
+                    showSaveSuccess = true
+                } else {
+                    onSaved()
+                }
             }
         }
     }

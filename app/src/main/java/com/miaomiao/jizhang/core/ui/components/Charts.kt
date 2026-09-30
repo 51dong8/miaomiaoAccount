@@ -31,7 +31,7 @@ fun DonutChart(
     modifier: Modifier = Modifier,
     centerText: String? = null,
     centerSubText: String? = null,
-    trackColor: Color = Color(0xFFEFE5D9)
+    trackColor: Color = MaterialTheme.colorScheme.surfaceVariant
 ) {
     val total = slices.sumOf { it.value.toDouble() }.toFloat()
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
