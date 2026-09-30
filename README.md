@@ -56,11 +56,6 @@ gradlew.bat testDebugUnitTest
 app/
   core/       # 通用：数据层、主题、组件、日期/猫咪/周期纯逻辑
   feature/    # 业务模块：home / records / add / stats / budget / cat / settings / manage / recurring
-docs/         # PRODUCT / ARCHITECTURE / DATABASE / UI_GUIDE / TASKS / SELF_TEST_REPORT / PRIVACY_POLICY
 store_assets/ # 商店素材：512 图标、feature graphic
 ```
 
-## 📄 其他
-
-- 隐私政策：见 [docs/PRIVACY_POLICY.md](docs/PRIVACY_POLICY.md)
-- 功能自查与修复记录：见 [docs/SELF_TEST_REPORT.md](docs/SELF_TEST_REPORT.md)

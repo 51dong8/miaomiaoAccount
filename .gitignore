@@ -23,3 +23,6 @@ app/build
 
 # 根目录 APK 产物（GitHub 不建议存二进制安装包）
 *.apk
+
+# 内部文档（不入库）
+/docs/
